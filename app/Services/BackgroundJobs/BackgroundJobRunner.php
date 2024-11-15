@@ -11,7 +11,7 @@ use Symfony\Component\Process\Process;
 class BackgroundJobRunner
 {
     private const ALLOWED_CLASSES = [
-        
+        // Add your allowed class names here
         'App\\Jobs\\',
         'App\\Services\\',
     ];
@@ -19,7 +19,7 @@ class BackgroundJobRunner
     private const LOG_FILE = 'background_jobs.log';
     private const ERROR_LOG_FILE = 'background_jobs_errors.log';
     private const MAX_RETRIES = 3;
-    private const RETRY_DELAY = 5; 
+    private const RETRY_DELAY = 5; // seconds
 
     /**
      * Run a job in the background
@@ -53,10 +53,10 @@ class BackgroundJobRunner
             'created_at' => now(),
         ];
 
-     
+        // Store job data in cache
         Cache::put("background_job:{$jobId}", $jobData);
 
-     
+        // Create the background process
         $this->executeInBackground($jobId);
 
         return $jobId;
@@ -100,7 +100,7 @@ class BackgroundJobRunner
         try {
             $this->updateJobStatus($jobId, 'running');
             
-            
+            // Handle delay if specified
             if ($jobData['delay'] > 0) {
                 sleep($jobData['delay']);
             }
@@ -128,7 +128,7 @@ class BackgroundJobRunner
             $jobData['status'] = 'pending_retry';
             Cache::put("background_job:{$jobId}", $jobData);
             
-         
+            // Wait before retry
             sleep(self::RETRY_DELAY);
             $this->executeInBackground($jobId);
             
@@ -144,12 +144,12 @@ class BackgroundJobRunner
      */
     private function validateJob(string $className, string $methodName): void
     {
-     
+        // Validate class name
         if (!$this->isClassAllowed($className)) {
             throw new Exception("Class {$className} is not allowed to run as background job");
         }
 
-  
+        // Validate method exists
         if (!method_exists($className, $methodName)) {
             throw new Exception("Method {$methodName} does not exist in class {$className}");
         }
